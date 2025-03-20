@@ -14,7 +14,7 @@
 }
 <h1 class="text-center my-4">Edit Employee</h1>
 <div class="container">
-    <form asp-action="Edit">
+    <form asp-action="Edit" enctype="multipart/form-data">
         @* // هنا لوعلوز استخدم ال partial view هعمل الجز المشترك comment انما هنا مش هعملها علشانهي مشكله في الmodel  *@
         @* <partial name="EmployeePartialView/_CreatEditePartialView" /> *@
 
@@ -80,8 +80,18 @@
                 <option value="@null"></option>
             </select>
         </div>
-        <div class="d-flex justify-content-start gap-3">
-            <input type="submit" value="Edit" class="btn btn-primary" />
+
+        @*check condation *@
+        @*فيه صوره ولا لا في التحديث*@
+        <input asp-for="ImageName" hidden/>
+
+        <div class="form-group">
+            <label class="col-form-label" ></label>
+            <input  type="file" class="form-control" />
+        </div>
+
+		<div class="d-flex justify-content-start gap-3 mt-4">
+            <input type="submit" value="Edit" class=" btn btn-primary" />
             <a asp-action="Index"  class="btn btn-light">Back to List</a>
         </div>
     </form>
