@@ -10,17 +10,21 @@ namespace Company.PL.Controllers
     public class DepartmentController : Controller
     {
         private readonly IMapper _mapper;
-        private readonly IDepartmentRepository _departmentRepository;
 
+        // ============== olde way==============
+        //private readonly IDepartmentRepository _departmentRepository;
+        // ============ new way ================
+        private readonly IUnitOfWork _unitOfWork;
 
 
         // Constructor Injection
         // Ask CLR to create an object of DepartmentRepository
 
-        public DepartmentController(IMapper mapper,IDepartmentRepository departmentRepository)
+        public DepartmentController(IMapper mapper,IUnitOfWork unitOfWork)//IDepartmentRepository departmentRepository)
         {
             _mapper = mapper;
-            _departmentRepository = departmentRepository;
+            _unitOfWork = unitOfWork;
+            //_departmentRepository = departmentRepository;
         }
 
 
@@ -28,16 +32,16 @@ namespace Company.PL.Controllers
 
 
         [HttpGet] // GET: Department/Index
-        public IActionResult Index(string? SearchName)
+        public async Task<IActionResult> Index(string? SearchName)
         {
             IEnumerable<Department> departments;
             if(string.IsNullOrEmpty(SearchName))
             {
-                departments = _departmentRepository.GetAll();
+                departments =await _unitOfWork.departmentRepository.GetAllAsync();
             }
             else
             {
-                departments = _departmentRepository.GetDepartmentByName(SearchName);
+                departments =await _unitOfWork.departmentRepository.GetDepartmentByNameAsync(SearchName);
             }
             return View(departments);
         }
@@ -54,20 +58,22 @@ namespace Company.PL.Controllers
         }
 
         [HttpPost] 
-        public IActionResult Create(DepartmentDTO model)
+        public async Task<IActionResult> Create(DepartmentDTO model)
         {
             if (ModelState.IsValid) // Server Side Validation
             {
-                //var department = new Department
-                //{
-                //    Code = model.Code,
-                //    Name = model.Name,
-                //    CreateAt = model.CreateAt
-                //};
+                var department = new Department
+                {
+                    Code = model.Code,
+                    Name = model.Name,
+                    CreateAt = model.CreateAt
+                };
 
                 // ====== outo mapping ======
-                var department= _mapper.Map<Department>(model);
-                var count = _departmentRepository.Add(department);
+                //var department= _mapper.Map<Department>(model);
+               await _unitOfWork.departmentRepository.AddAsync(department);
+                int count =await _unitOfWork.completeAsync();
+
                 if (count > 0)
                 {
                     TempData["Message"] = "Department Added Successfully";
@@ -79,11 +85,11 @@ namespace Company.PL.Controllers
         }
 
         [HttpGet]
-        public IActionResult Details(int? id ,string ViewName="Details")
+        public async Task<IActionResult> Details(int? id ,string ViewName="Details")
         {
             if (id is null)
                 return BadRequest();// stat code 400
-            var department = _departmentRepository.Get(id.Value);
+            var department =await _unitOfWork.departmentRepository.GetAsync(id.Value);
 
             if (department is null)
                 return NotFound(new {StatusCode=400,Message=$"Department with id : {id} not found"});
@@ -99,7 +105,7 @@ namespace Company.PL.Controllers
         }
 
         [HttpGet]
-        public IActionResult Edit(int? id ) 
+        public Task<IActionResult> Edit(int? id ) 
         {
             //if (id is null)
             //    return BadRequest();// stat code 400
@@ -120,7 +126,7 @@ namespace Company.PL.Controllers
 
         // ايه الي راجع من الفورم بتاعت الاديت DepartmentDTO departmentDTO
         [HttpPost]// بتاخد البيانات من الفورم وتعمل تعديل
-        public IActionResult Edit([FromRoute]int id, DepartmentDTO department) 
+        public async Task<IActionResult> Edit([FromRoute]int id, DepartmentDTO department) 
         {
             
                 if (!ModelState.IsValid) return BadRequest();
@@ -131,8 +137,10 @@ namespace Company.PL.Controllers
                     Name = department.Name,
                     CreateAt = department.CreateAt
                 };
-                int count = _departmentRepository.Update(departmentm);
-                if (count > 0)
+                /*int count =*/ _unitOfWork.departmentRepository.Update(departmentm);
+            int count =await _unitOfWork.completeAsync();
+
+            if (count > 0)
                 {
                      TempData["Message"] = "Department Updated Successfully";
                     return RedirectToAction(nameof(Index)); // بتحولك علي الصفحة الرئيسية
@@ -143,7 +151,7 @@ namespace Company.PL.Controllers
         }
 
         [HttpGet]
-        public IActionResult Delete(int? id)
+        public Task<IActionResult> Delete(int? id)
         {
             //if (id is null)
             //    return BadRequest();// stat code 400
@@ -161,7 +169,7 @@ namespace Company.PL.Controllers
         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete([FromRoute]int? id, DepartmentDTO dTO)
+        public async Task<IActionResult> Delete([FromRoute]int? id, DepartmentDTO dTO)
         {
            if (!ModelState.IsValid) return BadRequest();
            var departmentm = new Department()
@@ -171,8 +179,10 @@ namespace Company.PL.Controllers
                Name = dTO.Name,
                CreateAt = dTO.CreateAt
            };
-           int count = _departmentRepository.Delete(departmentm);
-           if (count > 0)
+          /* int count =*/ _unitOfWork.departmentRepository.Delete(departmentm);
+            int count =await _unitOfWork.completeAsync();
+
+            if (count > 0)
            {
                 TempData["Message"] = "Department Deleted Successfully";
                 return RedirectToAction(nameof(Index)); // بتحولك علي الصفحة الرئيسية

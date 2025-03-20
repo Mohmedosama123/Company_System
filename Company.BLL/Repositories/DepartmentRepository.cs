@@ -54,11 +54,11 @@ namespace Company.BLL.Repositories
             _context = context;
         }
 
-        public IEnumerable<Department> GetDepartmentByName(string name)
+        public async Task<IEnumerable<Department>>  GetDepartmentByNameAsync(string name)
         {
-            return _context.Departments
-                .Where(e => e.Name.ToLower()
-                .Contains(name.ToLower())).ToList();
+            return await _context.Departments
+                .Where(e => e.Name.ToLower() == name.ToLower()).ToListAsync();
+                //.Contains(name.ToLower())).ToList();
         }
     }
 }
