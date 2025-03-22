@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Company.BLL.Interfaces
 {
-    public interface IDepartmentRepository: IGenaricRepository<Department>
+    public interface IDepartmentRepository : IGenaricRepository<Department>
     {
         Task<IEnumerable<Department>> GetDepartmentByNameAsync(string name);
         //IEnumerable<Department> GetAll();
